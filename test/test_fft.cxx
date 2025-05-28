@@ -5,6 +5,7 @@
 #include <vector>
 #include <cmath>
 #include <cassert>
+#include <run_fft_convolution.h>
 
 __global__ void zero_pad_kernel(float* input, float* output, int input_size, int padded_size);
 __global__ void apply_glu_activation(float* a, float* b, float* out, int N);
