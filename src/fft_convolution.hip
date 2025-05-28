@@ -15,3 +15,9 @@ __global__ void pointwise_complex_multiply(hipfftComplex* a, hipfftComplex* b, h
         out[idx].y = a_real * b_imag + a_imag * b_real;
     }
 }
+
+hipError_t run_fft_convolution(float* input, float* filter, float* output,
+                                int signal_size, int filter_size, hipStream_t stream) {
+    
+    return hipSuccess;
+}
