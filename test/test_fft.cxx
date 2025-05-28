@@ -242,6 +242,18 @@ int main() {
         return -1;
     }
 
+    std::cout << "\nFFT Convolution Test:\n";
+    for (int i = 0; i < output.size(); ++i) {
+        std::cout << "output[" << i << "] = " << output[i] << "\n";
+        float expected = 0.0f;
+        for (int j = 0; j < filter_size; ++j) {
+            if (i - j >= 0 && i - j < signal_size) {
+                expected += signal[i - j] * filter[j];
+            }
+        }
+        assert(std::abs(output[i] - expected) < 1e-5);
+    }
+
     std::cout << "All tests passed!\n";
     return 0;
 }
