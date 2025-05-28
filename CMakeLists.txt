@@ -6,6 +6,8 @@ cmake_policy(VERSION 3.21.3...3.27)
 project(HIPFFTConv LANGUAGES C CXX HIP)
 # set the compiler to HIP or amdclang
 set(CMAKE_CXX_COMPILER hipcc)
+# adding nostartfiles to avoid linking issues with HIP runtime
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostartfiles")
 
 # Enable HIP support
 find_package(HIP REQUIRED)
