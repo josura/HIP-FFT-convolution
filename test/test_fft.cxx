@@ -152,7 +152,7 @@ int main() {
 
     std::cout << "\nGLU Activation Test:\n";
     for (int i = 0; i < N; ++i) {
-        float expected = a[i] / (1.0f + std::exp(b[i]));
+        float expected = a[i] / (1.0f + std::exp(-b[i]));
         std::cout << "out[" << i << "] = " << out[i] << ", expected: " << expected << "\n";
         assert(std::abs(out[i] - expected) < 1e-3);
     }
