@@ -213,6 +213,15 @@ int main() {
         err = hipFree(d_output);
         return -1;
     }
+    err = run_fft_convolution(d_signal, d_filter, d_output, signal_size, filter_size, stream);
+    if (err != hipSuccess) {
+        std::cerr << "Error running FFT convolution: " << hipGetErrorString(err) << "\n";
+        err = hipStreamDestroy(stream);
+        err = hipFree(d_signal);
+        err = hipFree(d_filter);
+        err = hipFree(d_output);
+        return -1;
+    }
 
     std::cout << "All tests passed!\n";
     return 0;
