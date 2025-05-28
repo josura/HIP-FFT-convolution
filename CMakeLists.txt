@@ -16,6 +16,22 @@ find_package(HIP REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# select backend for HIP, nvidia for NVIDIA GPUs, something else for AMD GPUs
+# TODO
+
+# Optional: Set HIP compiler explicitly (can help debugging or docker builds)
+# set(CMAKE_CXX_COMPILER hipcc)  # Usually not needed if HIP is properly set up
+
+# Determine backend platform
+if(HIP_PLATFORM STREQUAL "amd")
+    message(STATUS "Detected HIP Platform: AMD (ROCm)")
+    set(HIP_BACKEND "rocm")
+elseif(HIP_PLATFORM STREQUAL "nvidia")
+    message(STATUS "Detected HIP Platform: NVIDIA (CUDA backend)")
+    set(HIP_BACKEND "cuda")
+else()
+    message(WARNING "Unknown HIP platform, assuming default behavior.")
+endif()
 # possibly set the HIP_ARCHITECTURES variable to target specific GPU architectures
 
 # Set build flags
