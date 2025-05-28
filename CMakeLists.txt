@@ -12,3 +12,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # possibly set the HIP_ARCHITECTURES variable to target specific GPU architectures
+
+# Set build flags
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_HIP_STANDARD 17)
+
+# Include subdirectories
+add_subdirectory(src)
+add_subdirectory(test)
+add_subdirectory(examples)
