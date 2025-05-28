@@ -29,21 +29,27 @@ int main() {
     err = hipMalloc(&d_padded, padded_size * sizeof(float));
     if (err != hipSuccess) {
         std::cerr << "Error allocating device memory for padded output: " << hipGetErrorString(err) << "\n";
-        hipFree(d_input);
+        err = hipFree(d_input);
         return -1;
     }
 
     err = hipMemcpy(d_input, input.data(), input_size * sizeof(float), hipMemcpyHostToDevice);
     if (err != hipSuccess) {
         std::cerr << "Error copying input data to device: " << hipGetErrorString(err) << "\n";
-        hipFree(d_input);
-        hipFree(d_padded);
+        err = hipFree(d_input);
+        err = hipFree(d_padded);
         return -1;
     }
 
     zero_pad_kernel<<<1, padded_size>>>(d_input, d_padded, input_size, padded_size);
 
-    hipMemcpy(padded.data(), d_padded, padded_size * sizeof(float), hipMemcpyDeviceToHost);
+    err = hipMemcpy(padded.data(), d_padded, padded_size * sizeof(float), hipMemcpyDeviceToHost);
+    if (err != hipSuccess) {
+        std::cerr << "Error copying padded data from device: " << hipGetErrorString(err) << "\n";
+        err = hipFree(d_input);
+        err = hipFree(d_padded);
+        return -1;
+    }
 
     std::cout << "Zero Padding Test:\n";
     for (int i = 0; i < padded_size; ++i)
