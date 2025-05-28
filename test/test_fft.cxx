@@ -169,6 +169,41 @@ int main() {
     std::vector<float> output(signal_size + filter_size - 1, 0.0f);
     for (int i = 0; i < signal_size; ++i) signal[i] = i + 1;
     for (int i = 0; i < filter_size; ++i) filter[i] = 1.0f;
+    float *d_signal, *d_filter, *d_output;
+    err = hipMalloc(&d_signal, signal_size * sizeof(float));
+    if (err != hipSuccess) {
+        std::cerr << "Error allocating device memory for signal: " << hipGetErrorString(err) << "\n";
+        return -1;
+    }
+    err = hipMalloc(&d_filter, filter_size * sizeof(float));
+    if (err != hipSuccess) {
+        std::cerr << "Error allocating device memory for filter: " << hipGetErrorString(err) << "\n";
+        err = hipFree(d_signal);
+        return -1;
+    }
+    err = hipMalloc(&d_output, (signal_size + filter_size - 1) * sizeof(float));
+    if (err != hipSuccess) {
+        std::cerr << "Error allocating device memory for output: " << hipGetErrorString(err) << "\n";
+        err = hipFree(d_signal);
+        err = hipFree(d_filter);
+        return -1;
+    }
+    err = hipMemcpy(d_signal, signal.data(), signal_size * sizeof(float), hipMemcpyHostToDevice);
+    if (err != hipSuccess) {
+        std::cerr << "Error copying signal data to device: " << hipGetErrorString(err) << "\n";
+        err = hipFree(d_signal);
+        err = hipFree(d_filter);
+        err = hipFree(d_output);
+        return -1;
+    }
+    err = hipMemcpy(d_filter, filter.data(), filter_size * sizeof(float), hipMemcpyHostToDevice);
+    if (err != hipSuccess) {
+        std::cerr << "Error copying filter data to device: " << hipGetErrorString(err) << "\n";
+        err = hipFree(d_signal);
+        err = hipFree(d_filter);
+        err = hipFree(d_output);
+        return -1;
+    }
 
     std::cout << "All tests passed!\n";
     return 0;
