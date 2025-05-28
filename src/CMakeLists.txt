@@ -1,4 +1,4 @@
-# TODO add FFT convolution kernel and the convolutional layer kernel 
+# CMakeLists.txt for hipfftconv library of kernels 
 add_library(hipfftconv STATIC
     fft_utils.hip 
     conv_layer.hip
