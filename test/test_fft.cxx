@@ -204,6 +204,15 @@ int main() {
         err = hipFree(d_output);
         return -1;
     }
+    hipStream_t stream;
+    err = hipStreamCreate(&stream);
+    if (err != hipSuccess) {
+        std::cerr << "Error creating HIP stream: " << hipGetErrorString(err) << "\n";
+        err = hipFree(d_signal);
+        err = hipFree(d_filter);
+        err = hipFree(d_output);
+        return -1;
+    }
 
     std::cout << "All tests passed!\n";
     return 0;
