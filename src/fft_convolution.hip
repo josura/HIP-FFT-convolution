@@ -48,8 +48,8 @@ hipError_t run_fft_convolution(float* input, float* filter, float* output,
     hipMalloc(&d_filter_fft, fft_size * sizeof(hipfftComplex));
     hipMalloc(&d_result_fft, fft_size * sizeof(hipfftComplex));
 
-    hipMemsetAsync(d_input_padded, 0, fft_size * sizeof(float), stream);
-    hipMemsetAsync(d_filter_padded, 0, fft_size * sizeof(float), stream);
+    hipMemsetAsync(d_input_padded, 0, fft_size * sizeof(float), stream); // initial padding
+    hipMemsetAsync(d_filter_padded, 0, fft_size * sizeof(float), stream); // initial padding(to filter)
 
     hipMemcpyAsync(d_input_padded, input, signal_size * sizeof(float), hipMemcpyDeviceToDevice, stream);
     hipMemcpyAsync(d_filter_padded, filter, filter_size * sizeof(float), hipMemcpyDeviceToDevice, stream);
