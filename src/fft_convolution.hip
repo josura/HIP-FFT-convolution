@@ -1,9 +1,25 @@
+/**
+ * @file fft_convolution.hip
+ * @brief This file contains the implementation of FFT-based convolution using HIP.
+ * It includes the necessary kernel for pointwise multiplication of complex numbers and the main function to run the FFT convolution.
+ * This implementation uses the HIPFFT library for performing Fast Fourier Transforms.
+ * @todo Use the distributed FFT library for better performance. example in here @link https://rocmdocs.amd.com/projects/hipFFT/en/develop/conceptual/overview.html @link
+ */
 #include <hip/hip_runtime.h>
 //#include <hipfft.h>
 #include <cmath>
 #include <iostream>
 #include "run_fft_convolution.h"
 
+/**
+ * @brief HIP kernel performing pointwise multiplication of two complex arrays.
+ * @param a Pointer to the first complex array.
+ * @param b Pointer to the second complex array.
+ * @param out Pointer to the output complex array.
+ * @param N Size of the complex arrays.
+ * @note This kernel assumes that the input arrays are of size N and that the output array is also of size N.
+ * @note The complex numbers are represented as hipfftComplex, which contains two floats: x (real part) and y (imaginary part).
+ */
 __global__ void pointwise_complex_multiply(hipfftComplex* a, hipfftComplex* b, hipfftComplex* out, int N) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < N) {
