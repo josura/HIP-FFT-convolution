@@ -254,6 +254,22 @@ int main() {
         assert(std::abs(output[i] - expected) < 1e-5);
     }
 
+    err = hipFree(d_signal);
+    if (err != hipSuccess) {
+        std::cerr << "Error freeing device memory for signal: " << hipGetErrorString(err) << "\n";
+        return -1;
+    }
+    err = hipFree(d_filter);
+    if (err != hipSuccess) {
+        std::cerr << "Error freeing device memory for filter: " << hipGetErrorString(err) << "\n";
+        return -1;
+    }
+    err = hipFree(d_output);
+    if (err != hipSuccess) {
+        std::cerr << "Error freeing device memory for output: " << hipGetErrorString(err) << "\n";
+        return -1;
+    }
+
     std::cout << "All tests passed!\n";
     return 0;
 }
