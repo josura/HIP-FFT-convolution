@@ -4,6 +4,8 @@
 cmake_minimum_required(VERSION 3.21) # HIP language support requires 3.21
 cmake_policy(VERSION 3.21.3...3.27)
 project(HIPFFTConv LANGUAGES C CXX HIP)
+# set the compiler to HIP or amdclang
+set(CMAKE_CXX_COMPILER hipcc)
 
 # Enable HIP support
 find_package(HIP REQUIRED)
