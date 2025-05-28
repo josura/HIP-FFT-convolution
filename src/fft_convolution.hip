@@ -32,6 +32,18 @@ __global__ void pointwise_complex_multiply(hipfftComplex* a, hipfftComplex* b, h
     }
 }
 
+/**
+ * @brief Function to perform FFT-based convolution of a signal with a filter.
+ * @param input Pointer to the input signal array on the device.
+ * @param filter Pointer to the filter array on the device.
+ * @param output Pointer to the output array on the device.
+ * @param signal_size Size of the input signal.
+ * @param filter_size Size of the filter.
+ * @param stream HIP stream for asynchronous execution.
+ * @return hipError_t indicating success or failure of the operation.
+ * @todo Use the distributed FFT library for better performance. example in here @link https://rocmdocs.amd.com/projects/hipFFT/en/develop/conceptual/overview.html @link
+ * @todo handle errors more gracefully, possibly with exceptions or error codes.
+ */
 hipError_t run_fft_convolution(float* input, float* filter, float* output,
                                 int signal_size, int filter_size, hipStream_t stream) {
     int conv_size = signal_size + filter_size - 1;
@@ -41,18 +53,84 @@ hipError_t run_fft_convolution(float* input, float* filter, float* output,
     hipfftHandle plan_fwd, plan_inv;
     hipfftComplex *d_input_fft, *d_filter_fft, *d_result_fft;
     float *d_input_padded, *d_filter_padded;
+    hipError_t err;
+    err = hipMalloc(&d_input_padded, fft_size * sizeof(float));
+    if (err != hipSuccess) {
+        std::cerr << "hipMalloc for d_input_padded failed: " << hipGetErrorString(err) << std::endl;
+        return err;
+    }
+    err = hipMalloc(&d_filter_padded, fft_size * sizeof(float));
+    if (err != hipSuccess) {
+        std::cerr << "hipMalloc for d_filter_padded failed: " << hipGetErrorString(err) << std::endl;
+        err = hipFree(d_input_padded);
+        return err;
+    }
+    err = hipMalloc(&d_input_fft, fft_size * sizeof(hipfftComplex));
+    if (err != hipSuccess) {
+        std::cerr << "hipMalloc for d_input_fft failed: " << hipGetErrorString(err) << std::endl;
+        err = hipFree(d_input_padded);
+        err = hipFree(d_filter_padded);
+        return err;
+    }
+    err = hipMalloc(&d_filter_fft, fft_size * sizeof(hipfftComplex));
+    if (err != hipSuccess) {
+        std::cerr << "hipMalloc for d_filter_fft failed: " << hipGetErrorString(err) << std::endl;
+        err = hipFree(d_input_padded);
+        err = hipFree(d_filter_padded);
+        err = hipFree(d_input_fft);
+        return err;
+    }
+    err = hipMalloc(&d_result_fft, fft_size * sizeof(hipfftComplex));
+    if (err != hipSuccess) {
+        std::cerr << "hipMalloc for d_result_fft failed: " << hipGetErrorString(err) << std::endl;
+        err = hipFree(d_input_padded);
+        err = hipFree(d_filter_padded);
+        err = hipFree(d_input_fft);
+        err = hipFree(d_filter_fft);
+        return err;
+    }
 
-    hipMalloc(&d_input_padded, fft_size * sizeof(float));
-    hipMalloc(&d_filter_padded, fft_size * sizeof(float));
-    hipMalloc(&d_input_fft, fft_size * sizeof(hipfftComplex));
-    hipMalloc(&d_filter_fft, fft_size * sizeof(hipfftComplex));
-    hipMalloc(&d_result_fft, fft_size * sizeof(hipfftComplex));
+    err = hipMemsetAsync(d_input_padded, 0, fft_size * sizeof(float), stream); // initial padding
+    if (err != hipSuccess) {
+        std::cerr << "hipMemsetAsync for d_input_padded failed: " << hipGetErrorString(err) << std::endl;
+        err = hipFree(d_input_padded);
+        err = hipFree(d_filter_padded);
+        err = hipFree(d_input_fft);
+        err = hipFree(d_filter_fft);
+        err = hipFree(d_result_fft);
+        return err;
+    }
+    err = hipMemsetAsync(d_filter_padded, 0, fft_size * sizeof(float), stream); // initial padding(to filter)
+    if (err != hipSuccess) {
+        std::cerr << "hipMemsetAsync for d_filter_padded failed: " << hipGetErrorString(err) << std::endl;
+        err = hipFree(d_input_padded);
+        err = hipFree(d_filter_padded);
+        err = hipFree(d_input_fft);
+        err = hipFree(d_filter_fft);
+        err = hipFree(d_result_fft);
+        return err;
+    }
 
-    hipMemsetAsync(d_input_padded, 0, fft_size * sizeof(float), stream); // initial padding
-    hipMemsetAsync(d_filter_padded, 0, fft_size * sizeof(float), stream); // initial padding(to filter)
-
-    hipMemcpyAsync(d_input_padded, input, signal_size * sizeof(float), hipMemcpyDeviceToDevice, stream);
-    hipMemcpyAsync(d_filter_padded, filter, filter_size * sizeof(float), hipMemcpyDeviceToDevice, stream);
+    err = hipMemcpyAsync(d_input_padded, input, signal_size * sizeof(float), hipMemcpyDeviceToDevice, stream);
+    if (err != hipSuccess) {
+        std::cerr << "hipMemcpyAsync for d_input_padded failed: " << hipGetErrorString(err) << std::endl;
+        err = hipFree(d_input_padded);
+        err = hipFree(d_filter_padded);
+        err = hipFree(d_input_fft);
+        err = hipFree(d_filter_fft);
+        err = hipFree(d_result_fft);
+        return err;
+    }
+    err = hipMemcpyAsync(d_filter_padded, filter, filter_size * sizeof(float), hipMemcpyDeviceToDevice, stream);
+    if (err != hipSuccess) {
+        std::cerr << "hipMemcpyAsync for d_filter_padded failed: " << hipGetErrorString(err) << std::endl;
+        err = hipFree(d_input_padded);
+        err = hipFree(d_filter_padded);
+        err = hipFree(d_input_fft);
+        err = hipFree(d_filter_fft);
+        err = hipFree(d_result_fft);
+        return err;
+    }
 
     hipfftPlan1d(&plan_fwd, fft_size, HIPFFT_R2C, 1);
     hipfftPlan1d(&plan_inv, fft_size, HIPFFT_C2R, 1);
@@ -71,11 +149,26 @@ hipError_t run_fft_convolution(float* input, float* filter, float* output,
     hipfftDestroy(plan_fwd);
     hipfftDestroy(plan_inv);
 
-    hipFree(d_input_padded);
-    hipFree(d_filter_padded);
-    hipFree(d_input_fft);
-    hipFree(d_filter_fft);
-    hipFree(d_result_fft);
+    err = hipFree(d_input_padded);
+    if (err != hipSuccess) {
+        std::cerr << "[WARNING] hipFree for d_input_padded failed: " << hipGetErrorString(err) << std::endl;
+    }
+    err = hipFree(d_filter_padded);
+    if (err != hipSuccess) {
+        std::cerr << "[WARNING] hipFree for d_filter_padded failed: " << hipGetErrorString(err) << std::endl;
+    }
+    err = hipFree(d_input_fft);
+    if (err != hipSuccess) {
+        std::cerr << "[WARNING] hipFree for d_input_fft failed: " << hipGetErrorString(err) << std::endl;
+    }
+    err = hipFree(d_filter_fft);
+    if (err != hipSuccess) {
+        std::cerr << "[WARNING] hipFree for d_filter_fft failed: " << hipGetErrorString(err) << std::endl;
+    }
+    err = hipFree(d_result_fft);
+    if (err != hipSuccess) {
+        std::cerr << "[WARNING] hipFree for d_result_fft failed: " << hipGetErrorString(err) << std::endl;
+    }
 
     return hipSuccess;
 }
