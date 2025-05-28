@@ -9,7 +9,7 @@
 //#include <hipfft.h>
 #include <cmath>
 #include <iostream>
-#include "run_fft_convolution.h"
+#include "fft_convolution.h"
 
 /**
  * @brief HIP kernel performing pointwise multiplication of two complex arrays.
