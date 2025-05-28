@@ -2,6 +2,7 @@
 add_library(hipfftconv STATIC
     fft_utils.hip 
     conv_layer.hip
+    fft_convolution.hip
 )
 target_include_directories(hipfftconv PUBLIC
     #$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
