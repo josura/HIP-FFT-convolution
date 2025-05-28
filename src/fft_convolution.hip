@@ -144,7 +144,16 @@ hipError_t run_fft_convolution(float* input, float* filter, float* output,
 
     hipfftExecC2R(plan_inv, d_result_fft, d_input_padded);
 
-    hipMemcpyAsync(output, d_input_padded, conv_size * sizeof(float), hipMemcpyDeviceToDevice, stream);
+    err = hipMemcpyAsync(output, d_input_padded, conv_size * sizeof(float), hipMemcpyDeviceToDevice, stream);
+    if (err != hipSuccess) {
+        std::cerr << "hipMemcpyAsync for output failed: " << hipGetErrorString(err) << std::endl;
+        err = hipFree(d_input_padded);
+        err = hipFree(d_filter_padded);
+        err = hipFree(d_input_fft);
+        err = hipFree(d_filter_fft);
+        err = hipFree(d_result_fft);
+        return err;
+    }
 
     hipfftDestroy(plan_fwd);
     hipfftDestroy(plan_inv);
