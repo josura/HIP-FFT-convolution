@@ -157,11 +157,18 @@ int main() {
         assert(std::abs(out[i] - expected) < 1e-3);
     }
 
-    err = hipFree(d_input);
-    err = hipFree(d_padded);
     err = hipFree(d_a);
     err = hipFree(d_b);
     err = hipFree(d_out);
+
+    // testing fft convolution
+    const int signal_size = 8;
+    const int filter_size = 4;
+    std::vector<float> signal(signal_size, 0.0f);
+    std::vector<float> filter(filter_size, 0.0f);
+    std::vector<float> output(signal_size + filter_size - 1, 0.0f);
+    for (int i = 0; i < signal_size; ++i) signal[i] = i + 1;
+    for (int i = 0; i < filter_size; ++i) filter[i] = 1.0f;
 
     std::cout << "All tests passed!\n";
     return 0;
