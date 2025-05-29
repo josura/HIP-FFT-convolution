@@ -32,6 +32,12 @@ __global__ void pointwise_complex_multiply(hipfftComplex* a, hipfftComplex* b, h
     }
 }
 
+__global__ void normalize_output(float* data, int size, float scale) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < size)
+        data[idx] /= scale;
+}
+
 /**
  * @brief Function to perform FFT-based convolution of a signal with a filter.
  * @param input Pointer to the input signal array on the device.
@@ -143,6 +149,12 @@ hipError_t run_fft_convolution(float* input, float* filter, float* output,
     pointwise_complex_multiply<<<blocks, threads, 0, stream>>>(d_input_fft, d_filter_fft, d_result_fft, fft_size / 2 + 1);
 
     hipfftExecC2R(plan_inv, d_result_fft, d_input_padded);
+
+    // Normalize the real output after inverse FFT
+    int norm_threads = 256;
+    int norm_blocks = (fft_size + norm_threads - 1) / norm_threads;
+    normalize_output<<<norm_blocks, norm_threads, 0, stream>>>(d_input_padded, fft_size, static_cast<float>(fft_size));
+
 
     err = hipMemcpyAsync(output, d_input_padded, conv_size * sizeof(float), hipMemcpyDeviceToDevice, stream);
     if (err != hipSuccess) {
