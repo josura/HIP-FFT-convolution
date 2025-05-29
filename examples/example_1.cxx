@@ -30,10 +30,27 @@ int main() {
     std::vector<float> h_padded(out_size);
 
     float *d_input, *d_padded;
-    hipMalloc(&d_input, in_size * sizeof(float));
-    hipMalloc(&d_padded, out_size * sizeof(float));
+    // error variable to check for errors
+    hipError_t err;
+    err = hipMalloc(&d_input, in_size * sizeof(float));
+    if (err != hipSuccess) {
+        std::cerr << "Error allocating device memory for input: " << hipGetErrorString(err) << "\n";
+        return -1;
+    }
+    err = hipMalloc(&d_padded, out_size * sizeof(float));
+    if (err != hipSuccess) {
+        std::cerr << "Error allocating device memory for padded output: " << hipGetErrorString(err) << "\n";
+        err = hipFree(d_input);
+        return -1;
+    }
 
-    hipMemcpy(d_input, h_input.data(), in_size * sizeof(float), hipMemcpyHostToDevice);
+    err = hipMemcpy(d_input, h_input.data(), in_size * sizeof(float), hipMemcpyHostToDevice);
+    if (err != hipSuccess) {
+        std::cerr << "Error copying input data to device: " << hipGetErrorString(err) << "\n";
+        err = hipFree(d_input);
+        err = hipFree(d_padded);
+        return -1;
+    }
 
     // Launch padding kernel
     int threads = 256;
@@ -43,7 +60,13 @@ int main() {
     // Launch sigmoid kernel on padded data
     hipLaunchKernelGGL(sigmoid_kernel, dim3(blocks), dim3(threads), 0, 0, d_padded, out_size);
 
-    hipMemcpy(h_padded.data(), d_padded, out_size * sizeof(float), hipMemcpyDeviceToHost);
+    err = hipMemcpy(h_padded.data(), d_padded, out_size * sizeof(float), hipMemcpyDeviceToHost);
+    if (err != hipSuccess) {
+        std::cerr << "Error copying padded data from device: " << hipGetErrorString(err) << "\n";
+        err = hipFree(d_input);
+        err = hipFree(d_padded);
+        return -1;
+    }
 
     std::cout << "Padded and sigmoid-activated output:\n";
     for (int i = 0; i < out_size; ++i) {
@@ -51,7 +74,7 @@ int main() {
     }
     std::cout << std::endl;
 
-    hipFree(d_input);
-    hipFree(d_padded);
+    err = hipFree(d_input);
+    err = hipFree(d_padded);
     return 0;
 }
