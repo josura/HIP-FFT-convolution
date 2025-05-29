@@ -158,6 +158,8 @@ void benchmark_fft_convolution(int signal_size, int filter_size, int iterations 
 }
 
 int main() {
+    std::cout << "Starting FFT Convolution Benchmark..." << std::endl;
+    std::cout << "Smallest signal size: 128, largest signal size: 32768" << std::endl;
     std::vector<std::pair<int, int>> test_cases = {
         {128, 3}, {128, 5}, {128, 8}, {512, 5}, {512, 8}, {512, 11}, {1024, 11}, {1024, 15}, {1024, 20}, {1024, 31}, {2048, 31}, {2048, 44}, {2048, 63}, {4096, 63}, {4096, 127}, {8192, 127}, {8192, 255}, {16384, 255}, {16384, 511}, {32768, 511}, {32768, 1023}
     };
@@ -165,6 +167,16 @@ int main() {
     for (const auto& [signal_size, filter_size] : test_cases) {
         benchmark_fft_convolution(signal_size, filter_size);
     }
+    // Additional test cases for larger sizes
+    std::cout << "Additional test cases for larger sizes..." << std::endl;
+    std::vector<std::pair<int, int>> additional_cases = {
+        {65536, 1023}, {65536, 2047}, {131072, 2047}, {131072, 4095}, {262144, 4095}, {262144, 8191}, {524288, 8191}, {524288, 16383}, {1048576, 16383}, {1048576, 32767}, {2097152, 32767}, {2097152, 65535}
+    };
+    for (const auto& [signal_size, filter_size] : additional_cases) {
+        benchmark_fft_convolution(signal_size, filter_size);
+    }
+
+    std::cout << "All benchmarks completed successfully." << std::endl;
 
     return 0;
 }
