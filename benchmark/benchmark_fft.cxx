@@ -175,6 +175,14 @@ int main() {
     for (const auto& [signal_size, filter_size] : additional_cases) {
         benchmark_fft_convolution(signal_size, filter_size);
     }
+    // Very large test cases
+    std::cout << "Very large test cases..." << std::endl;
+    std::vector<std::pair<int, int>> very_large_cases = {
+        {41943040, 65535}, {41943040, 131071}, {83886080, 131071}, {83886080, 262143}, {167772160, 262143}, {167772160, 524287}, {335544320, 524287}, {335544320, 1048575}
+    };
+    for (const auto& [signal_size, filter_size] : very_large_cases) {
+        benchmark_fft_convolution(signal_size, filter_size);
+    }
 
     std::cout << "All benchmarks completed successfully." << std::endl;
 
