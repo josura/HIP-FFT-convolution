@@ -133,7 +133,11 @@ void benchmark_fft_convolution(int signal_size, int filter_size, int iterations 
         }
 
         float milliseconds = 0;
-        hipEventElapsedTime(&milliseconds, start, stop);
+        err = hipEventElapsedTime(&milliseconds, start, stop);
+        if (err != hipSuccess) {
+            std::cerr << "Error calculating elapsed time for iteration " << i << ": " << hipGetErrorString(err) << std::endl;
+            break;
+        }
         total_time_ms += milliseconds;
     }
 
