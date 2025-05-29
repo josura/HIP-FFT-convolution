@@ -6,6 +6,25 @@
 #include <cassert>
 #include "fft_convolution.h"
 
+// Function to run FFT convolution in cpu (single threaded)
+void run_fft_convolution_cpu(const std::vector<float>& signal, const std::vector<float>& filter, std::vector<float>& output) {
+    int signal_size = signal.size();
+    int filter_size = filter.size();
+    int conv_size = signal_size + filter_size - 1;
+
+    // Initialize output to zero
+    std::fill(output.begin(), output.end(), 0.0f);
+
+    // Perform convolution
+    for (int i = 0; i < signal_size; ++i) {
+        for (int j = 0; j < filter_size; ++j) {
+            if (i + j < conv_size) {
+                output[i + j] += signal[i] * filter[j];
+            }
+        }
+    }
+}
+
 void benchmark_fft_convolution(int signal_size, int filter_size, int iterations = 100) {
     std::vector<float> signal(signal_size, 1.0f);
     std::vector<float> filter(filter_size, 1.0f);
@@ -108,6 +127,7 @@ void benchmark_fft_convolution(int signal_size, int filter_size, int iterations 
 
     // Benchmarking
     float total_time_ms = 0.0f;
+    float total_time_cpu_ms = 0.0f;
     for (int i = 0; i < iterations; ++i) {
         err = hipEventRecord(start, stream);
         if (err != hipSuccess) {
@@ -139,12 +159,22 @@ void benchmark_fft_convolution(int signal_size, int filter_size, int iterations 
             break;
         }
         total_time_ms += milliseconds;
+        // Run CPU convolution for comparison
+        auto start_cpu = std::chrono::high_resolution_clock::now();
+        run_fft_convolution_cpu(signal, filter, output);
+        auto end_cpu = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<float, std::milli> cpu_duration = end_cpu - start_cpu;
+        total_time_cpu_ms += cpu_duration.count();
     }
 
     std::cout << "[Benchmark] Signal size = " << signal_size
               << ", Filter size = " << filter_size
               << ", Avg Time over " << iterations << " runs: "
               << (total_time_ms / iterations) << " ms" << std::endl;
+    std::cout << "[Benchmark] CPU Avg Time over " << iterations << " runs: "
+                << (total_time_cpu_ms / iterations) << " ms" << std::endl;
+    std::cout << "[Benchmark] Speedup: "
+              << (total_time_cpu_ms / total_time_ms) << "x" << std::endl;
 
     err = hipFree(d_signal);
     if (err != hipSuccess) {
