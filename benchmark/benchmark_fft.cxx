@@ -189,6 +189,60 @@ void benchmark_fft_convolution(int signal_size, int filter_size, int iterations 
 
 int main() {
     std::cout << "Starting FFT Convolution Benchmark..." << std::endl;
+    // Print the device properties
+    int device_count;
+    hipError_t err = hipGetDeviceCount(&device_count);
+    if (err != hipSuccess) {
+        std::cerr << "Error getting device count: " << hipGetErrorString(err) << std::endl;
+        return -1;
+    }
+    std::cout << "Number of HIP devices: " << device_count << std::endl;
+    if (device_count == 0) {
+        std::cerr << "No HIP devices found." << std::endl;
+        return -1;
+    }
+    int device_id = 0; // Use the first device
+    err = hipSetDevice(device_id);
+    if (err != hipSuccess) {
+        std::cerr << "Error setting device: " << hipGetErrorString(err) << std::endl;
+        return -1;
+    }
+    hipDeviceProp_t device_prop;
+    err = hipGetDeviceProperties(&device_prop, device_id);
+    if (err != hipSuccess) {
+        std::cerr << "Error getting device properties: " << hipGetErrorString(err) << std::endl;
+        return -1;
+    }
+    std::cout << "Device Name: " << device_prop.name << std::endl;
+    std::cout << "Total Global Memory: " << device_prop.totalGlobalMem / (1024 * 1024) << " MB" << std::endl;
+    std::cout << "Max Threads Per Block: " << device_prop.maxThreadsPerBlock << std::endl;
+    std::cout << "Max Threads Dim: (" << device_prop.maxThreadsDim[0] << ", "
+              << device_prop.maxThreadsDim[1] << ", "
+              << device_prop.maxThreadsDim[2] << ")" << std::endl;
+    std::cout << "Max Grid Size: (" << device_prop.maxGridSize[0] << ", "
+              << device_prop.maxGridSize[1] << ", "
+              << device_prop.maxGridSize[2] << ")" << std::endl;
+    std::cout << "Max Shared Memory Per Block: " << device_prop.sharedMemPerBlock / 1024 << " KB" << std::endl;
+    std::cout << "Max Memory Pitch: " << device_prop.memPitch / 1024 << " KB" << std::endl;
+    std::cout << "Max Registers Per Block: " << device_prop.regsPerBlock << std::endl;
+    std::cout << "Warp Size: " << device_prop.warpSize << std::endl;
+    std::cout << "Clock Rate: " << device_prop.clockRate / 1000 << " MHz" << std::endl;
+    std::cout << "Total Constant Memory: " << device_prop.totalConstMem / 1024 << " KB" << std::endl;
+    std::cout << "Compute Capability: " << device_prop.major << "." << device_prop.minor << std::endl;
+    std::cout << "Concurrent Kernels: " << (device_prop.concurrentKernels ? "Yes" : "No") << std::endl;
+    std::cout << "Unified Addressing: " << (device_prop.unifiedAddressing ? "Yes" : "No") << std::endl;
+    std::cout << "L2 Cache Size: " << device_prop.l2CacheSize / 1024 << " KB" << std::endl;
+    std::cout << "Max Threads Per Multiprocessor: " << device_prop.maxThreadsPerMultiProcessor << std::endl;
+    std::cout << "Multi-Processor Count: " << device_prop.multiProcessorCount << std::endl;
+    std::cout << "Memory Clock Rate: " << device_prop.memoryClockRate / 1000 << " MHz" << std::endl;
+    std::cout << "Memory Bus Width: " << device_prop.memoryBusWidth << " bits" << std::endl;
+    std::cout << "Total Memory: " << device_prop.totalGlobalMem / (1024 * 1024) << " MB" << std::endl;
+    std::cout << "Max Texture Dimension 1D: " << device_prop.maxTexture1D << std::endl;
+    std::cout << "Max Texture Dimension 2D: (" << device_prop.maxTexture2D[0] << ", "
+              << device_prop.maxTexture2D[1] << ")" << std::endl;
+    std::cout << "Max Texture Dimension 3D: (" << device_prop.maxTexture3D[0] << ", "
+              << device_prop.maxTexture3D[1] << ", "
+              << device_prop.maxTexture3D[2] << ")" << std::endl;
     std::cout << "Smallest signal size: 128, largest signal size: 32768" << std::endl;
     std::vector<std::pair<int, int>> test_cases = {
         {128, 3}, {128, 5}, {128, 8}, {512, 5}, {512, 8}, {512, 11}, {1024, 11}, {1024, 15}, {1024, 20}, {1024, 31}, {2048, 31}, {2048, 44}, {2048, 63}, {4096, 63}, {4096, 127}, {8192, 127}, {8192, 255}, {16384, 255}, {16384, 511}, {32768, 511}, {32768, 1023}
