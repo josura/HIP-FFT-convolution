@@ -252,6 +252,7 @@ int main() {
                 expected += signal[i - j] * filter[j];
             }
         }
+        std::cout << "Expected: " << expected << "\n";
         assert(std::abs(output[i] - expected) < 1e-5);
     }
 
