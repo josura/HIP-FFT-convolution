@@ -32,6 +32,13 @@ __global__ void pointwise_complex_multiply(hipfftComplex* a, hipfftComplex* b, h
     }
 }
 
+/**
+ * @brief HIP kernel to normalize the output of the inverse FFT.
+ * @param data Pointer to the output data array.
+ * @param size Size of the output data array.
+ * @param scale Normalization scale factor.
+ * @note This kernel divides each element in the output data by the scale factor.
+ */
 __global__ void normalize_output(float* data, int size, float scale) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < size)
@@ -52,11 +59,10 @@ __global__ void normalize_output(float* data, int size, float scale) {
  */
 hipError_t run_fft_convolution(float* input, float* filter, float* output,
                                 int signal_size, int filter_size, hipStream_t stream) {
-    int conv_size = signal_size + filter_size - 1;
+    int conv_size = signal_size + filter_size - 1; // considering the padded size for convolution, since it's required for FFT linear convolution
     int fft_size = 1;
-    while (fft_size < conv_size) fft_size <<= 1;
+    while (fft_size < conv_size) fft_size <<= 1; // Bit shifting to get the next power of two greater than or equal to conv_size, ensuring efficient FFT computation.
 
-    hipfftHandle plan_fwd, plan_inv;
     hipfftComplex *d_input_fft, *d_filter_fft, *d_result_fft;
     float *d_input_padded, *d_filter_padded;
     hipError_t err;
@@ -138,8 +144,9 @@ hipError_t run_fft_convolution(float* input, float* filter, float* output,
         return err;
     }
 
-    hipfftPlan1d(&plan_fwd, fft_size, HIPFFT_R2C, 1);
-    hipfftPlan1d(&plan_inv, fft_size, HIPFFT_C2R, 1);
+    hipfftHandle plan_fwd, plan_inv; // Handles for forward and inverse FFT plans
+    hipfftPlan1d(&plan_fwd, fft_size, HIPFFT_R2C, 1); // Create a plan for forward FFT (Real to Complex)
+    hipfftPlan1d(&plan_inv, fft_size, HIPFFT_C2R, 1); // Create a plan for inverse FFT (Complex to Real)
 
     hipfftExecR2C(plan_fwd, d_input_padded, d_input_fft);
     hipfftExecR2C(plan_fwd, d_filter_padded, d_filter_fft);
