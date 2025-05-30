@@ -21,3 +21,13 @@ To run the example, execute the following command in the `build` directory:
 ```bash
 ./build/examples/example_conv
 ```
+
+# BENCHMARKING
+To run the benchmark, execute the following command in the `build` directory:
+```bash
+./build/benchmark/benchmark_fft
+```
+To see options for the benchmark, run:
+```bash
+./build/benchmark/benchmark_fft --help
+```
