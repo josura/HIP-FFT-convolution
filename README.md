@@ -1,5 +1,5 @@
 # HIP-FFT-convolution
-Convolutions for Long Sequences, implemented in HIP, optimised for multi-gpu support
+Convolutions for Long Sequences, implemented in HIP, optimised for multi-gpu support. Under development 
 
 # BUILDING
 To build the project, run the following command in the root directory of the project:
